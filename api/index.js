@@ -50,12 +50,12 @@ app.post("/api/refresh", (req,res) => {
         });
     });
     //if valid, create new access token, refresh token and send to user 
-});
+})
 
 const generateAccessToken = (user) => {
     return jwt.sign({ id:user.id, isAdmin:user.isAdmin }, 
     "mySecretKey", 
-    { expiresIn : "20s"})
+    { expiresIn : "40s"})
 }
 
 const generateRefreshToken = (user) => {
@@ -103,6 +103,13 @@ const verify = (req,res,next) => {
         res.status(401).json("You aint authenticated");
     }
 }
+
+//using refresh token to logout
+app.post("/api/logout", verify, (req,res) => {
+    const refreshToken = req.body.token;
+    refreshTokens = refreshTokens.filter(token => token !== refreshToken);
+    res.status(200).json("Logged out successfully");
+})
 
 app.delete("/api/users/:userId", verify, (req,res) => {
     //middleware: using the verify function to check if the user is authenticated
