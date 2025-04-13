@@ -79,6 +79,7 @@ app.post("/api/login", (req,res) => {
             username: user.username,
             isAdmin: user.isAdmin,
             accessToken: accessToken,
+            refreshToken: refreshToken,
         });
     } else {
         res.status(401).json({message: "Invalid credentials"});
