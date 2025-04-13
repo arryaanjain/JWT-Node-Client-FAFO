@@ -32,7 +32,8 @@ app.post("/api/login", (req,res) => {
     });
     if (user) {
         //Generate an access token
-        const accessToken = jwt.sign({id:user.id, isAdmin:user.isAdmin }, "mySecretKey");
+        const accessToken = jwt.sign(
+            { id:user.id, isAdmin:user.isAdmin }, "mySecretKey", { expiresIn : "20s"});
         res.json({
             username: user.username,
             isAdmin: user.isAdmin,
@@ -67,7 +68,7 @@ app.delete("/api/users/:userId", verify, (req,res) => {
         res.status(200).json("User deleted");
     } else {
         res.status(403).json("Not allowed to delete this user");
-    }
+    } 
 })
 
 app.listen(5030, ()=> console.log("Server is running on port 5030"));
