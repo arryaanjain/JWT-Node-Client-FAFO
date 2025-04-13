@@ -30,22 +30,36 @@ let refreshTokens = [];
 //refresh tokens are supposed to be stored in a database or "redis cache"
 app.post("/api/refresh", (req,res) => {
     //take refresh token from the user
-    const token = req.body.token;
+    const refreshToken = req.body.token;
     //send error if no token or invalid token
-    if (!token) {
+    if (!refreshToken) {
         return res.status(401).json("You are not authenticated");
     }
+    if (!refreshTokens.includes(refreshToken)) { 
+        return res.status(403).json("Refresh token isn't valid");
+    }
+    jwt.verify(refreshToken, "myRefreshSecretKey", (err,user) => {
+        err && console.log(err);
+        refreshTokens = refreshTokens.filter(token => token !== refreshToken);
+        const newAccessToken = generateAccessToken({ id:user.id, isAdmin:user.isAdmin });
+        const newRefreshToken = generateRefreshToken({ id:user.id, isAdmin:user.isAdmin });
+        refreshTokens.push(newRefreshToken);
+        res.status(200).json({
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+    });
     //if valid, create new access token, refresh token and send to user 
 });
 
 const generateAccessToken = (user) => {
-    jwt.sign({ id:user.id, isAdmin:user.isAdmin }, 
+    return jwt.sign({ id:user.id, isAdmin:user.isAdmin }, 
     "mySecretKey", 
     { expiresIn : "20s"})
 }
 
 const generateRefreshToken = (user) => {
-    jwt.sign({ id:user.id, 
+    return jwt.sign({ id:user.id, 
         isAdmin:user.isAdmin }, 
         "myRefreshSecretKey");
 }
@@ -57,9 +71,10 @@ app.post("/api/login", (req,res) => {
     });
     if (user) {
         //Generate an access token
-        generateAccessToken(user);
+        const accessToken = generateAccessToken(user);
         //Generate a refresh token
-        generateRefreshToken(user);
+        const refreshToken =  generateRefreshToken(user);
+        refreshTokens.push(refreshToken);
         res.json({
             username: user.username,
             isAdmin: user.isAdmin,
