@@ -25,6 +25,32 @@ const users = [
     },
 ];
 
+let refreshTokens = [];
+
+//refresh tokens are supposed to be stored in a database or "redis cache"
+app.post("/api/refresh", (req,res) => {
+    //take refresh token from the user
+    const token = req.body.token;
+    //send error if no token or invalid token
+    if (!token) {
+        return res.status(401).json("You are not authenticated");
+    }
+    //if valid, create new access token, refresh token and send to user 
+});
+
+const generateAccessToken = (user) => {
+    jwt.sign({ id:user.id, isAdmin:user.isAdmin }, 
+    "mySecretKey", 
+    { expiresIn : "20s"})
+}
+
+const generateRefreshToken = (user) => {
+    jwt.sign({ id:user.id, 
+        isAdmin:user.isAdmin }, 
+        "myRefreshSecretKey", 
+        { expiresIn : "20s"});
+}
+
 app.post("/api/login", (req,res) => {
     const {username, password} = req.body;
     const user = users.find(u=> {
@@ -32,8 +58,9 @@ app.post("/api/login", (req,res) => {
     });
     if (user) {
         //Generate an access token
-        const accessToken = jwt.sign(
-            { id:user.id, isAdmin:user.isAdmin }, "mySecretKey", { expiresIn : "20s"});
+        generateAccessToken(user);
+        //Generate a refresh token
+        generateRefreshToken(user);
         res.json({
             username: user.username,
             isAdmin: user.isAdmin,
